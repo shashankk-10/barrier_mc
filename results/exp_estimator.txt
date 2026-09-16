@@ -1,0 +1,68 @@
+
+=== exp_estimator: why the coupled estimator, and what it buys ========
+contract : down-and-out call, zero rebate
+params   : S=100 K=100 H=95 r=0.05 q=0 sigma=0.3 T=0.2
+1048576 paths, 8 threads, 6.0 s
+
+[1] the bridge estimator: lower variance, and flat in m
+
+    m | var(discrete) | var(bridge) | ratio |   bridge mean   | (mean - closed form)/s.e.
+------+---------------+-------------+-------+-----------------+--------------------------
+   25 |       73.7649 |     65.3434 | 0.886 |     3.981915491 |                    -2.83
+   50 |       72.6646 |     66.2986 | 0.912 |     3.980866593 |                    -2.94
+  100 |       71.6614 |     66.9925 | 0.935 |     3.980769854 |                    -2.93
+  200 |       70.8705 |     67.4736 | 0.952 |     3.980855880 |                    -2.91
+  400 |       70.2698 |     67.8136 | 0.965 |     3.980315839 |                    -2.97
+  800 |       69.8209 |     68.0481 | 0.975 |     3.979785010 |                    -3.03
+ 1600 |       69.4744 |     68.2257 | 0.982 |     3.979777088 |                    -3.03
+
+    The discrete price moves by 0.5474 across this range of m; the bridge
+    price moves by 0.0021. That is the difference between an estimator that
+    has a discretisation bias and one that does not.
+
+[2] coupling the two estimators on one path
+
+    m |  var(coupled diff) | var if independent |  variance ratio
+------+--------------------+--------------------+----------------
+   25 |           6.803050 |           139.1083 |           20.4x
+   50 |           5.419019 |           138.9632 |           25.6x
+  100 |           4.112367 |           138.6540 |           33.7x
+  200 |           3.041179 |           138.3440 |           45.5x
+  400 |           2.242018 |           138.0834 |           61.6x
+  800 |           1.656844 |           137.8690 |           83.2x
+ 1600 |           1.182061 |           137.7001 |          116.5x
+
+    The two payoffs differ only on paths that dipped below the barrier
+    between two monitoring dates and came back, so the difference is
+    identically zero on most paths. Independent runs would have to
+    subtract two large noisy numbers to see the same small quantity.
+
+[3] paths needed to measure the gap to 1% relative
+
+    m |    gap     |  target s.e. |  coupled paths |  independent paths
+------+------------+--------------+----------------+-------------------
+   25 | +0.6365952 |     6.37e-03 |      1.679e+05 |          3.433e+06
+   50 | +0.4735415 |     4.74e-03 |      2.417e+05 |          6.197e+06
+  100 | +0.3464079 |     3.46e-03 |      3.427e+05 |          1.155e+07
+  200 | +0.2508721 |     2.51e-03 |      4.832e+05 |          2.198e+07
+  400 | +0.1804014 |     1.80e-03 |      6.889e+05 |          4.243e+07
+  800 | +0.1290831 |     1.29e-03 |      9.944e+05 |          8.274e+07
+ 1600 | +0.0920412 |     9.20e-04 |      1.395e+06 |          1.625e+08
+
+[4] antithetic variates, on a payoff with a jump discontinuity
+
+    matched on payoff evaluations: 524288 antithetic pairs vs 1048576 plain
+
+    m | var/eval plain | var/eval antithetic | efficiency
+------+----------------+---------------------+-----------
+   25 |        74.1716 |             52.8460 |      1.40x   (rho = -0.288)
+   50 |        73.0697 |             53.2534 |      1.37x   (rho = -0.271)
+  100 |        72.1130 |             53.4349 |      1.35x   (rho = -0.259)
+
+    Efficiency is 1/(1+rho) for correlation rho between a path and its
+    reflection. The gain is real but modest: the terminal payoff is
+    monotone in the driving normals, which is the case antithetic
+    sampling suits, but the knock-out indicator is not -- a path and its
+    reflection are not both near the barrier, so the negative correlation
+    that pays for the second evaluation is much weaker than it would be
+    for a vanilla.

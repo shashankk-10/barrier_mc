@@ -1,0 +1,120 @@
+
+=== exp_correction: what the barrier shift buys =======================
+contract : down-and-out call, zero rebate
+params   : S=100 K=100 H=95 r=0.05 q=0 sigma=0.3 T=0.2
+continuous closed form            : 4.004229446969
+beta = -zeta(1/2)/sqrt(2 pi)      : 0.58259715793901068
+
+    m | log(S/H)/sig.sqrt(dt) |    gap     |  residual after | |gap|/|resid| | resid * m^1.5
+      |    (validity ratio)   |            |   barrier shift |              |
+------+-----------------------+------------+-----------------+--------------+--------------
+   25 |                 1.912 | +0.6365952 |      -2.127e-03 |          299 |   -2.658e-01
+   50 |                 2.703 | +0.4735415 |      -2.554e-04 |         1854 |   -9.030e-02
+  100 |                 3.823 | +0.3464079 |      -1.037e-04 |         3341 |   -1.037e-01
+  200 |                 5.407 | +0.2508721 |      -3.658e-05 |         6858 |   -1.035e-01
+  400 |                 7.646 | +0.1804014 |      -1.290e-05 |        13979 |   -1.032e-01
+  800 |                10.814 | +0.1290831 |      -4.551e-06 |        28365 |   -1.030e-01
+ 1600 |                15.293 | +0.0920412 |      -1.615e-06 |        56997 |   -1.033e-01
+
+fitted slope of log|residual| on log(dt):
+   all m          : 1.6327   (dragged by the two coarsest rows)
+   m >= 100       : 1.5016
+   BGK guarantees : o(dt^0.5). Measured here: dt^1.5.
+
+   Where the asymptote starts is itself a measurement. resid*m^1.5 is
+   flat at -0.103 from m=100 onward, is 13% off it at m=50, and is 2.6x
+   off at m=25 -- so the expansion becomes usable at a validity ratio of
+   about 3.8, not at the ratio of 2 that 'log(S/H) >> sigma*sqrt(dt)'
+   might suggest. That threshold is the operationally useful form of the
+   theorem's hypothesis.
+
+the barrier shift the price implies (no fit, no window, no basis):
+
+      m |   b implied    |  b - beta   | ratio to previous
+--------+----------------+-------------+-------------------
+     25 |     0.58027903 |  -2.318e-03 |        --
+     50 |     0.58224220 |  -3.550e-04 |              6.53
+    100 |     0.58240742 |  -1.897e-04 |              1.87
+    200 |     0.58250707 |  -9.009e-05 |              2.11
+    400 |     0.58255373 |  -4.343e-05 |              2.07
+    800 |     0.58257602 |  -2.114e-05 |              2.05
+   1600 |     0.58258673 |  -1.043e-05 |              2.03
+
+   Richardson on the last pair : 0.5825974361
+   -zeta(1/2)/sqrt(2 pi)       : 0.5825971579
+   disagreement                : 2.8e-07
+
+secondary, and truncation-limited to a few tenths of a percent:
+   dV/dH at H=95                : -0.50587030
+   predicted  -beta*sigma*H*dV/dH : 8.39948000
+   fitted     c1                  : 8.38088787   (c2 = -14.12990)
+   disagreement                   : -0.221 %  <- basis-dependent
+
+   Note that this and the residual test are NOT independent checks of
+   beta: both are the first-order expansion of the same shifted closed
+   form. The independent evidence is (a) the residual EXPONENT -- a beta
+   wrong by a relative eps would leave an O(sqrt(dt)) residual, not the
+   O(dt^1.5) measured above -- and (b) the Spitzer route in exp_overshoot,
+   which never looks at an option price at all.
+
+why the one-term log-log slope reads 0.4665 instead of 0.5000:
+   because c2*dt is not negligible. With c1 = 8.381 and c2 = -14.130, the
+   dt term is 15.1% of the sqrt(dt) term at m=25 and still 1.9% at
+   m=1600. Fitting a single power through a two-term expansion returns
+   an average of the two exponents, not the leading one.
+
+gap / (c1_theory * sqrt(dt)) -- should approach 1:
+   0.8474 0.8914 0.9222 0.9445 0.9605 0.9720 0.9801 
+
+--- benchmark resolution self-check ----------------------------------
+resid * m^1.5 should be constant if the residual really is O(dt^1.5).
+Re-running two rows at finer grids separates mathematics from grid error:
+
+    m |   grid (n/2n)   |  extrapolated price  |  resid * m^1.5
+------+-----------------+----------------------+----------------
+  400 |   4096/8192     |       4.184630472824 |       -0.10598
+  400 |   8192/16384    |       4.184630794990 |       -0.10340
+  400 |  16384/32768    |       4.184630815312 |       -0.10324
+  400 |  32768/65536    |       4.184630816577 |       -0.10323
+------+-----------------+----------------------+----------------
+ 1600 |   4096/8192     |       4.096267703425 |       -0.29263
+ 1600 |   8192/16384    |       4.096270484872 |       -0.11462
+ 1600 |  16384/32768    |       4.096270660944 |       -0.10335
+ 1600 |  32768/65536    |       4.096270671917 |       -0.10265
+------+-----------------+----------------------+----------------
+Every row lands on the same -0.103 once the grid is adequate, and at the
+default resolution both m = 400 and m = 1600 are already there. That was
+not true before the Richardson denominator was corrected for the true grid
+ratio (1.99614, not 2): with the textbook /3 the m = 1600 row read -0.1113
+and the residual exponent came out 1.4555 instead of 1.5016, which looked
+like the theory failing at fine monitoring and was this file's arithmetic.
+
+--- delta: what the shift buys the hedge -----------------------------
+
+      contract        |  m  | ratio |   exact   |  shifted (err)   | uncorrected (err)
+----------------------+-----+-------+-----------+------------------+-------------------
+headline, daily       |  50 |  2.70 |  0.746772 |  0.746657  -0.02% |  0.797614  +6.81%
+headline, 252 fix     | 252 |  6.07 |  0.773972 |  0.773973  +0.00% |  0.797614  +3.05%
+barrier 50bp away     | 252 |  0.40 |  1.154489 |  1.333306 +15.49% |  1.390217 +20.42%
+
+    On the headline contract the shift preserves the analytic delta to
+    0.015%, which is the production case for it: the fast closed-form
+    pricer keeps both its price and its hedge. At a validity ratio of
+    0.40 it does not. There the shifted price is still 4.60% off (1.661330
+    against 1.741485) and the delta is 15% off, so the correction buys
+    almost nothing exactly where the hedge is most dangerous, and the
+    contract belongs on a lattice instead.
+
+--- cost -------------------------------------------------------------
+
+   corrected closed form  : 146 ns per price (best of 5)
+   convolution benchmark  : 323 ms at m=50
+
+   Do not read that ratio as a lattice-versus-formula benchmark. This
+   benchmark is deliberately extravagant: it solves the whole value
+   function on two grids and extrapolates, to get six digits it does not
+   need for pricing. A production lattice for one price is far cheaper
+   than 323 ms. The honest statement is the order of magnitude -- a
+   closed form is tens of nanoseconds and any grid method is
+   milliseconds, so the shift is what decides whether a discretely-fixed
+   barrier can live in the pricer that gets called on every quote.

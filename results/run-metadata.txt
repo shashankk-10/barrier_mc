@@ -1,0 +1,6 @@
+host      : Darwin 24.6.0 arm64
+cpu       : Apple M1
+cores     : 8
+compiler  : Apple clang version 17.0.0 (clang-1700.6.3.2)
+cmake     : cmake version 4.2.3
+build     : Release, -Wall -Wextra -Wpedantic, no -ffast-math

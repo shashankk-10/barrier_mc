@@ -1,0 +1,88 @@
+
+=== exp_jump: what survives when the price can jump ===================
+contract : down-and-out call, Merton jump-diffusion
+params   : S=100 K=100 H=95 r=0.05 q=0 sigma=0.3 T=0.2
+
+[0] controls on the simulator
+    E[S_T] e^{-(r-q)T} / S_0 must be 1 exactly (the jump compensator),
+    and the realised jump count must match lambda*T.
+
+  lambda | mean jumps | expected |  martingale ratio (s.e.)
+---------+------------+----------+--------------------------
+     0.0 |    0.00000 |  0.00000 | +0.99999928 (9.30e-05)
+     1.0 |    0.20060 |  0.20000 | +0.99992267 (9.86e-05)
+     5.0 |    0.99903 |  1.00000 | +0.99997487 (1.19e-04)
+
+[1] lambda = 0 must reproduce the pure-diffusion results
+
+      m |  discrete (s.e.)    |  exact benchmark |  bridge (s.e.)      | closed form
+--------+---------------------+------------------+---------------------+-------------
+     50 |  4.472891 (0.005900) |         4.477771 |  4.000212 (0.005641) |    4.004229
+        |  -0.83 s.e. vs benchmark                   |  -0.71 s.e. vs closed form
+    200 |  4.254220 (0.005827) |         4.255102 |  4.000829 (0.005686) |    4.004229
+        |  -0.15 s.e. vs benchmark                   |  -0.60 s.e. vs closed form
+
+[2] the Gaussian bridge, carried over unchanged, is now biased
+    Applying the endpoint formula ignores every crossing caused by a jump
+    inside an interval. The jump-aware estimator conditions on the jump
+    times and sizes and is exact again; the difference is the bias.
+
+      m |  naive bridge  |  jump-aware   |   bias (s.e.)      | bias * m
+--------+----------------+---------------+--------------------+----------
+     25 |       4.609262 |      4.538370 | +0.070892 (0.000780) |  +1.7723
+     50 |       4.601434 |      4.564544 | +0.036890 (0.000567) |  +1.8445
+    100 |       4.594314 |      4.575779 | +0.018535 (0.000401) |  +1.8535
+    200 |       4.593437 |      4.584780 | +0.008658 (0.000265) |  +1.7315
+    400 |       4.596019 |      4.591687 | +0.004333 (0.000187) |  +1.7331
+
+    bias * m roughly constant means the naive estimator's error is
+    O(dt): the chance of a jump inside an interval is lambda*dt, and a
+    jump is the only thing the endpoint formula cannot see. Under pure
+    diffusion the same column would be identically zero.
+
+[3] the continuity correction under jumps
+    'gap' is discrete minus continuous, both from the jump-aware
+    estimator on the same paths. 'residual' is the same difference with
+    the continuous leg evaluated at the shifted barrier.
+
+    Read the |res|/s.e. column first. At lambda = 0 the true residual is
+    about 4e-5 (exp_correction measures it against the convolution
+    benchmark, which has no sampling error); that is an order of magnitude
+    below what two million paths can resolve, so those rows are noise and
+    their 'improvement' figures mean nothing. That is not a failure of the
+    experiment -- it is the reason the rest of this repo does not use Monte
+    Carlo to measure the residual. With jumps the residual rises above the
+    noise floor, and then the scaling can be read off.
+
+ lambda |     m |    gap (s.e.)      |  residual (s.e.)   | |res|/s.e. |  res * m  | improvement
+--------+-------+--------------------+--------------------+------------+-----------+------------
+    0.0 |    50 | +0.472679 (0.001596) | -0.000777 (0.000715) |        1.1 |   -0.0389 |   (noise)
+    0.0 |   200 | +0.253391 (0.001213) | +0.000237 (0.000547) |        0.4 |   +0.0473 |   (noise)
+    0.0 |   800 | +0.127810 (0.000876) | +0.000317 (0.000396) |        0.8 |   +0.2534 |   (noise)
+--------+-------+--------------------+--------------------+------------+-----------+------------
+    1.0 |    50 | +0.500361 (0.001701) | +0.009471 (0.000798) |       11.9 |   +0.4736 |       52.8x
+    1.0 |   200 | +0.263318 (0.001269) | +0.002434 (0.000581) |        4.2 |   +0.4868 |      108.2x
+    1.0 |   800 | +0.132529 (0.000917) | +0.001037 (0.000417) |        2.5 |   +0.8299 |   (noise)
+--------+-------+--------------------+--------------------+------------+-----------+------------
+    5.0 |    50 | +0.596423 (0.002079) | +0.048599 (0.001113) |       43.7 |   +2.4300 |       12.3x
+    5.0 |   200 | +0.300319 (0.001496) | +0.011897 (0.000736) |       16.2 |   +2.3794 |       25.2x
+    5.0 |   800 | +0.152238 (0.001083) | +0.002747 (0.000514) |        5.3 |   +2.1972 |       55.4x
+--------+-------+--------------------+--------------------+------------+-----------+------------
+
+    THE BOUNDARY, stated as a rate instead of as an adjective:
+
+      pure diffusion   gap = O(dt^0.5),  residual = O(dt^1.5)
+      with jumps       gap = O(dt^0.5),  residual = O(dt^1.0)
+
+    The gap column confirms the first half in both cases: a fourfold
+    refinement halves it, which is dt^0.5. The res*m column confirms the
+    second: it is roughly constant once jumps dominate, so the residual is
+    O(dt), whereas exp_correction's res*m^1.5 column is the constant one
+    under pure diffusion.
+
+    So the correction keeps working -- it still removes most of the gap,
+    and it is free -- but it stops being asymptotically exact. The barrier
+    shift compensates for a GAUSSIAN overshoot, and the part of the gap
+    caused by a jump crossing the barrier and returning inside a monitoring
+    interval is untouched by it. The improvement factor therefore grows
+    like sqrt(m) with jumps instead of like m without them.

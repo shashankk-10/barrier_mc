@@ -1,0 +1,53 @@
+
+=== exp_overshoot: recovering beta from Spitzer's identity ============
+beta as used by bgk.hpp : 0.58259715793901068
+zeta(1/2)               : -1.4603545088095868
+-zeta(1/2)/sqrt(2 pi)   : 0.58259715793901079
+
+[1] sum_{k=1..n} k^{-1/2} - 2 sqrt(n)  ->  zeta(1/2)
+    and the next term, (sum - 2 sqrt(n) - zeta(1/2)) * 2 sqrt(n) -> 1
+
+          n |  kahan sum - 2sqrt(n) |   naive - kahan |  next-term check
+------------+-----------------------+-----------------+------------------
+        100 |       -1.410396175216 |       -3.55e-15 |         0.999167
+      10000 |       -1.455354550476 |       +3.41e-13 |         0.999992
+    1000000 |       -1.459854508851 |       +5.00e-11 |         1.000000
+  100000000 |       -1.460304508808 |       +1.85e-09 |         1.000000
+      limit |       -1.460354508810 |
+
+[2] E[M_n] = (1/sqrt(2 pi)) sum k^{-1/2}   (Spitzer + Gaussian steps)
+    E[M_n] - sqrt(2n/pi)  ->  -beta
+
+          n |     E[M_n] exact  |  E[M_n] - sqrt(2n/pi) |  recovered beta
+------------+-------------------+-----------------------+-----------------
+        100 |       7.416178942 |       -0.562666666410 |    0.5826137804
+      10000 |      79.207853617 |       -0.580602463160 |    0.5825971746
+    1000000 |     797.302163116 |       -0.582397686815 |    0.5825971580
+  100000000 |    7978.263030818 |       -0.582577210823 |    0.5825971579
+      limit |                   |       -0.582597157939 |    0.5825971579
+
+[3] Spitzer's identity vs brute-force Monte Carlo.
+    Everything above rests on this, so it is checked rather than cited.
+
+     n |   MC E[M_n]  (s.e.)   |  Spitzer exact  | difference
+-------+-----------------------+-----------------+------------
+     1 |   0.399410 (0.000292) |     0.398942280 |  +1.60 s.e.
+     2 |   0.681270 (0.000417) |     0.681037072 |  +0.56 s.e.
+     5 |   1.289715 (0.000666) |     1.289250057 |  +0.70 s.e.
+    20 |   3.029899 (0.001343) |     3.030068360 |  -0.13 s.e.
+   100 |   7.413657 (0.003010) |     7.416178942 |  -0.84 s.e.
+   (4000000 paths per row)
+
+[4] beta from simulation alone, using no identity at all:
+    beta_hat = sqrt(2n/pi) - E[M_n]_MC + (1/2)/sqrt(2 pi n)
+
+     n |   beta_hat  |    s.e.   | deviation from beta
+-------+-------------+-----------+--------------------
+    25 |    0.580272 |  0.001502 | -1.55 s.e.
+   100 |    0.577521 |  0.003011 | -1.69 s.e.
+   400 |    0.578074 |  0.006026 | -0.75 s.e.
+
+    The standard error grows like sqrt(n) while the finite-n bias
+    shrinks like n^{-3/2}, so there is a floor on how well this route can
+    do on a laptop. That is precisely why bgk.hpp takes beta from the
+    zeta value and this experiment only has to confirm it.

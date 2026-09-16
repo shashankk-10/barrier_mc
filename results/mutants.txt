@@ -1,0 +1,17 @@
+kernel-orientation      killed by exact,mc,bgk,jump,exact_asan,mc_asan,jump_asan density as a function of the source, not the destination: the adjoint operator
+no-half-weight          killed by exact,mc,bgk,exact_asan,mc_asan full weight at the barrier node: first-order quadrature across the jump
+beta-sign               killed by bgk          barrier shifted toward spot instead of away
+bridge-no-factor-2      killed by mc,mc_asan   reflection-principle exponent missing its factor of two
+bridge-early-exit       killed by mc,mc_asan   survival approximation truncated far too early
+plain-skip-knockout     killed by mc,mc_asan   knocked-out paths dropped instead of counted at zero
+ncdf-cancelling-form    killed by numerics,numerics_asan left tail computed by cancellation
+philox-9-rounds         killed by numerics,numerics_asan one round short of the specified generator
+inout-parity            killed by exact,exact_asan knock-in parity with the wrong sign
+richardson-fixed-3      killed by exact,exact_asan Richardson assuming an exact grid ratio of 2 that quantisation does not give
+jump-unsorted           SURVIVED            jump times sorted the wrong way, so a sub-interval bridge gets a negative time gap
+delta-no-spot-divide    killed by exact,exact_asan delta left as dV/dlogS instead of dV/dS
+delta-onesided-sign     killed by exact,exact_asan one-sided stencil missing the direction factor
+welford-naive           killed by bgk          variance accumulated against the post-update mean
+
+killed 13, survived 1, not applied 0
+survivors: jump-unsorted

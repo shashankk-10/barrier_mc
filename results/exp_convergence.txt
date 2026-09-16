@@ -1,0 +1,27 @@
+
+=== exp_convergence: the size of the discretisation gap ===============
+contract : down-and-out call, zero rebate
+params   : S=100 K=100 H=95 r=0.05 q=0 sigma=0.3 T=0.2
+continuous closed form (bs.hpp)  : 4.004229446969
+monte carlo                      : 2097152 paths, 8 threads, 13.2 s
+
+    m |   exact discrete  | richardson |  gap (exact) |   gap %  |  gap (coupled MC)    | plain MC s.e. | gap/s.e.
+------+-------------------+------------+--------------+----------+----------------------+---------------+---------
+   25 | 4.640824619364 |   2.3e-06 | +0.63659517 | +15.90% | +0.63683608 (1.80e-03) |      5.94e-03 |   107.3
+   50 | 4.477770915211 |   3.5e-06 | +0.47354147 | +11.83% | +0.47310346 (1.60e-03) |      5.89e-03 |    80.4
+  100 | 4.350637301351 |   5.3e-06 | +0.34640785 |  +8.65% | +0.34467126 (1.39e-03) |      5.85e-03 |    59.2
+  200 | 4.255101571663 |   7.8e-06 | +0.25087212 |  +6.27% | +0.24870600 (1.20e-03) |      5.82e-03 |    43.1
+  400 | 4.184630815312 |   1.1e-05 | +0.18040137 |  +4.51% | +0.17869652 (1.03e-03) |      5.80e-03 |    31.1
+  800 | 4.133312539891 |   1.6e-05 | +0.12908309 |  +3.22% | +0.12836307 (8.79e-04) |      5.78e-03 |    22.3
+ 1600 | 4.096270660944 |   2.4e-05 | +0.09204121 |  +2.30% | +0.09168785 (7.46e-04) |      5.76e-03 |    16.0
+
+fitted slope of log|gap| on log(dt) : 0.4665   R^2 = 0.99952
+   (residual scatter 0.0046 -- NOT a confidence interval: the points share
+    paths by subsampling, so their errors are correlated. See stats.hpp.)
+theory (Broadie-Glasserman-Kou)     : 1/2
+
+successive ratios gap(2m)/gap(m)    : 0.7439 0.7315 0.7242 0.7191 0.7155 0.7130 
+                          (theory)    : 0.7071
+
+agreement, exact gap vs coupled MC gap (in MC standard errors):
+   +0.13 -0.27 -1.25 -1.81 -1.66 -0.82 -0.47 
