@@ -1,0 +1,14 @@
+build/
+cmake-build-*/
+*.dSYM/
+.cache/
+.idea/
+.vscode/
+compile_commands.json
+.DS_Store
+
+# results/ is committed on purpose: the numbers are properties of the mathematics,
+# not of the machine, so a clone should reproduce every one of them. Two caveats,
+# so nobody wastes time on a diff: the wall-clock lines obviously vary, and the
+# threaded reduction sums in a different order, so agreement is to the precision
+# printed and not bit-for-bit.
