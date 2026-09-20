@@ -1,18 +1,10 @@
 #pragma once
 
-// A radix-2 FFT, and a real-input wrapper built on a half-length complex
-// transform.
+// Radix-2 FFT with a real-input wrapper.
 //
-// This is here instead of pulled from FFTW or Accelerate because the repo is
-// dependency-free on purpose: the point of exact.hpp is that a reader can build
-// it and reproduce the benchmark table, and a table that depends on which
-// vendor library happened to be installed is worth less than one that does not.
-// It is also ~150 lines, which is cheaper than the build-system argument.
-//
-// The real wrapper earns its keep: exact.hpp runs one forward and one inverse
-// transform per monitoring date, and the largest table entry has 1600 of them on
-// two grids. Packing a length-N real signal into a length-N/2 complex transform
-// halves the time and, more to the point on an 8 GB machine, the working set.
+// Here rather than FFTW so the benchmark does not depend on which vendor library
+// happened to be installed. The real wrapper halves the working set, which
+// matters at 8 GB when exact.cpp runs 1600 transforms in sequence.
 
 #include <cassert>
 #include <cmath>

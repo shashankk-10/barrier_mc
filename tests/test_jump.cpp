@@ -1,17 +1,7 @@
 // The jump-diffusion module.
 //
-// This file exists for the same reason test_bgk.cpp does: mutation testing found
-// that jump.cpp had no assertions anywhere in ctest. Reversing the sort order of
-// the jump times inside a monitoring interval -- which makes a sub-interval
-// bridge span a NEGATIVE amount of time, and sends log_survival the log of a
-// negative number -- survived the entire suite, because the only thing that ever
-// executed that code was an experiment, and experiments are not registered with
-// ctest.
-//
-// The controls below are the ones that make the rest of exp_jump believable: if
-// the jump path does not collapse onto the diffusion path at lambda = 0, and if
-// the simulated asset is not a martingale after discounting, then nothing
-// downstream is a statement about Merton jump-diffusion.
+// Same story as test_bgk: mutation testing found jump.cpp had no assertions in
+// ctest. The controls below are what make the rest of exp_jump believable.
 
 #include <cmath>
 #include <initializer_list>
@@ -74,10 +64,10 @@ static void test_multi_jump_intervals_are_sane() {
   cfg.paths = 60000;
   JumpParams jp;
   // lambda*dt = 2 at m=25, so intervals routinely hold several jumps. This is
-  // DELIBERATELY outside the range the Poisson sampler is calibrated for
+  // deliberately outside the range the Poisson sampler is calibrated for
   // (it truncates at six per interval, valid for lambda*dt < 0.1, which every
   // row of exp_jump respects). Nothing here asserts accuracy at this intensity
-  // -- only that the multi-jump code path stays finite and correctly ordered.
+  //, only that the multi-jump code path stays finite and correctly ordered.
   jp.lambda = 50.0;
   for (int m : {5, 25}) {
     const auto r = run_jump(Side::Call, Dir::Down, kP, jp, m, cfg);
@@ -98,7 +88,7 @@ static void test_multi_jump_intervals_are_sane() {
 
 static void test_ordering_of_estimators() {
   // At a realistic intensity the same ordering must hold, and the naive bridge
-  // must be strictly biased high -- that gap is the finding in exp_jump.
+  // must be strictly biased high, that gap is the finding in exp_jump.
   McConfig cfg;
   cfg.paths = 400000;
   JumpParams jp;
@@ -107,7 +97,7 @@ static void test_ordering_of_estimators() {
   CHECK(r.bridge_naive.mean() > r.bridge_jump.mean());
   CHECK(r.discrete.mean() > r.bridge_jump.mean());
   // The two estimators run on the same paths, so the standard error of their
-  // difference is the coupled one, not the sum of theirs -- which is looser by
+  // difference is the coupled one, not the sum of theirs, which is looser by
   // more than an order of magnitude here and would make this assertion vacuous.
   CHECK(r.bridge_gap.mean() > 6.0 * r.bridge_gap.stderr_());
   CHECK_NEAR(r.bridge_gap.mean(),

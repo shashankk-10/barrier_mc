@@ -24,16 +24,16 @@
 //    i.e. the density as a function of the destination y given the source x.
 //    Writing the convolution with the kernel the other way round computes the
 //    adjoint operator instead. It still conserves mass, still converges as the
-//    grid is refined, and still returns a positive, monotone, plausible price
-//    -- it is simply the answer to a different question, off by a constant that
-//    no amount of refinement removes. The only thing that catches it is pricing
+//    grid is refined, and still returns a positive, monotone, plausible price.
+//    It is simply the answer to a different question, off by a constant that no
+//    amount of refinement removes. The only thing that catches it is pricing
 //    a case whose answer is known independently, which is why test_exact.cpp
 //    starts with m=1 (where the barrier is inert and the price must equal the
 //    vanilla Black-Scholes value to 1e-7) before it trusts anything else.
 //
 // 2. Quadrature order at the barrier. Knocking out leaves the value function
 //    discontinuous at the barrier, and a uniform-weight sum across a jump is
-//    only first-order accurate -- which is exactly the O(h) convergence this
+//    only first-order accurate, which is exactly the O(h) convergence this
 //    file is trying to measure the O(sqrt(dt)) version of. Putting a grid node
 //    exactly on the barrier and giving that node half weight makes the sum a
 //    trapezoid rule on the live side, restoring O(h^2). Measured on the m=2
@@ -54,7 +54,7 @@ struct ExactResult {
   double fine = 0.0;      // value on the 2n-point grid
   // (fine - coarse) / (ratio^2 - 1), where ratio is the true spacing ratio
   // between the two grids. Simultaneously the correction and an estimate of the
-  // error left in `fine`. Not the error of `price`, which is smaller -- see the
+  // error left in `fine`. Not the error of `price`, which is smaller, see the
   // grid ladder printed by exp_correction.
   double richardson = 0.0;
   size_t n = 0;           // coarse grid size actually used
@@ -70,8 +70,8 @@ struct GridInfo {
   double delta = 0.0;      // dV/dS at spot, off this grid
   bool one_sided = false;  // delta came from the one-sided stencil
 };
-// With m == 0 there is no grid -- the price is the vanilla one and the function
-// returns before building anything -- so only `delta` is filled and the rest stay
+// With m == 0 there is no grid, the price is the vanilla one and the function
+// returns before building anything, so only `delta` is filled and the rest stay
 // zero. discrete_exact handles that case separately instead of reading them.
 
 // Single-grid price. `n` must be a power of two.

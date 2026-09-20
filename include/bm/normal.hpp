@@ -1,29 +1,13 @@
 #pragma once
 
-// Standard normal density, distribution and quantile.
+// Standard normal density, CDF and quantile.
 //
-// Two choices here are load-bearing for the rest of the project and are worth
-// stating instead of burying:
+// CDF is erfc-based, not 1+erf. The barrier formulas reach the far left tail and
+// the erf form loses every digit there to cancellation.
 //
-// 1. The CDF goes through std::erfc, not through a polynomial approximation.
-//    The barrier formulas in bs.hpp evaluate Phi at arguments that run to the
-//    far left tail when the barrier is close to spot, and a rational
-//    approximation good to 1e-7 absolutely is good to nothing at all
-//    relatively once Phi(x) itself is 1e-9. erfc is the function that keeps its
-//    relative accuracy out there, and it is the reason cdf() is written as
-//    0.5 * erfc(-x / sqrt(2)) rather than the more familiar 0.5 * (1 + erf(...)):
-//    the erf form computes 1 + (something that is nearly -1) and loses every
-//    significant digit in the left tail to cancellation.
-//
-// 2. The quantile is Wichura's AS241 (PPND16), accurate to about 1e-16 relative
-//    across the whole range, instead of Box-Muller or a Ziggurat. Normals in
-//    this project are produced by inverting a uniform, never by transforming a
-//    pair of them, because inversion maps one uniform to one normal. Box-Muller
-//    consumes two uniforms and returns two normals through a rotation, which
-//    destroys the correspondence between a stream position and a Brownian
-//    increment -- and rng.hpp's whole design is that a path's d-th normal is a
-//    pure function of (path, d), whatever the thread count or the order of
-//    consumption. The nested-grid coupling in mc.cpp depends on that.
+// Quantile is Wichura AS241. Normals come from inverting one uniform, never
+// Box-Muller: rng.hpp needs a path's d-th normal to be a pure function of
+// (path, d), and a rotation of two uniforms destroys that.
 
 #include <cmath>
 

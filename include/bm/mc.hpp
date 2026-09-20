@@ -1,55 +1,18 @@
 #pragma once
 
-// The Monte Carlo engine: a discrete-monitoring estimator, a Brownian-bridge
-// estimator, and the coupling between them that makes the bias measurable.
+// Discrete and Brownian-bridge estimators, and the coupling between them.
 //
-// Why a coupled estimator.
+// Measuring the gap the obvious way does not scale: it falls like sqrt(dt), so
+// paths grow like 1/gap^2, which is ~1e12 paths once the gap is 1e-5.
 //
-// The obvious way to measure the discretisation bias is to price the discretely
-// monitored contract by Monte Carlo and subtract the continuous closed form.
-// That works, but it does not scale: the bias falls like sqrt(dt), so pinning it
-// to a fixed relative accuracy needs paths growing like 1/bias^2. Once the bias
-// is 1e-5 -- where this project spends most of its time, after the continuity
-// correction -- that is of order 1e12 paths. No amount of hardware rescues an
-// estimator with that scaling; the estimator has to change.
+// So both payoffs are computed on the same path. The discrete one is a 0/1
+// indicator. The bridge one is the probability the path stayed above the barrier
+// at every instant given the sampled points, which is a conditional expectation
+// of that indicator and so unbiased for the continuous price at any m. Their
+// per-path difference is zero on any path that never came near the barrier.
 //
-// So: on each path, compute both payoffs.
-//
-//   discrete  -- did the path finish above the barrier at every monitoring
-//                date? A 0/1 indicator.
-//   bridge    -- what is the probability the path stayed above the barrier at
-//                every instant, given where it was at the monitoring dates?
-//                Between two dates the log-price is a Brownian bridge, and the
-//                reflection principle gives that probability in closed form.
-//
-// The second is an unbiased estimator of the continuously monitored price, at
-// any m, because it is the conditional expectation of the continuous indicator
-// given the sampled points -- a Rao-Blackwellisation, so it also has strictly
-// lower variance than the indicator it replaces. The first is an unbiased
-// estimator of the discretely monitored price. Their difference, on the same
-// path, estimates exactly the quantity this project is about, without bias.
-//
-// And it is nearly zero on most paths: the two estimators disagree only where a
-// path dipped below the barrier between two monitoring dates and came back. So
-// the difference has a variance far smaller than either term, and the bias
-// becomes measurable at path counts a laptop can reach.
-//
-// Why the levels are nested.
-//
-// Fitting an exponent through prices at m = 25, 50, 100, ... needs those
-// estimates to be positively correlated; otherwise the slope is mostly sampling
-// noise, and it still comes with a confident-looking standard error. So a path is
-// generated once on the finest grid and every coarser level is obtained by taking
-// every 2nd, 4th, 8th point of it. Subsampling an exact GBM path gives an exact GBM path on the
-// coarser dates, so no level is approximated, and every level shares the same
-// terminal value -- which means they also share the same payoff, and the
-// differences between levels are due to monitoring alone.
-//
-// A consequence worth testing instead of asserting: because the bridge
-// estimator is unbiased for the continuous price at every m, its mean must be
-// the same at every level. exp_convergence prints that row, and it is the
-// sharpest evidence in the repo that the bridge really does remove the
-// discretisation error rather than merely shrink it.
+// Levels are nested: one path on the finest grid, coarser m by subsampling.
+// Subsampling exact GBM is still exact GBM. See DETAILS.md.
 
 #include <cstdint>
 #include <vector>

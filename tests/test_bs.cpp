@@ -1,11 +1,10 @@
-// The continuously-monitored closed forms.
+// The continuous closed forms.
 //
-// The Reiner-Rubinstein table is eight rows, each splitting again on whether the
-// strike is inside or outside the barrier, and a wrong row does not look wrong:
-// it returns a positive number, monotone in every input, that sits between the
-// vanilla and zero. So this file never eyeballs a price. Every value is checked
-// three ways -- against an independent implementation, against the in/out parity
-// identity, and against the limits where the barrier stops mattering.
+// A wrong row in the Reiner-Rubinstein table does not look wrong. It returns a
+// positive number, monotone in every input, between zero and the vanilla. So
+// nothing here is eyeballed: every value is checked against an independent
+// implementation, against in/out parity, and against the limits where the
+// barrier stops mattering.
 
 #include <cmath>
 #include <initializer_list>
@@ -40,7 +39,7 @@ static void test_vanilla() {
 // percent from spot and a deep-out-of-the-money case with a dividend yield
 // larger than the rate.
 static void test_table() {
-  // down, K>H -- the headline parameter set
+  // down, K>H, the headline parameter set
   { Params p{100.0, 100.0, 95.0, 0.05, 0.0, 0.3, 0.2};
     CHECK_REL(barrier_cont(Side::Call, Dir::Down, Knock::Out, p), 4.004229446968722, 1e-13);
     CHECK_REL(barrier_cont(Side::Call, Dir::Down, Knock::In, p), 1.8297846045075445, 1e-13);
@@ -65,7 +64,7 @@ static void test_table() {
     CHECK_REL(barrier_cont(Side::Put, Dir::Up, Knock::Out, p), 6.679409321192606, 1e-13);
     CHECK_REL(barrier_cont(Side::Put, Dir::Up, Knock::In, p), 0.9783521715013652, 1e-13);
   }
-  // up, K>H -- the up-and-out call is identically zero here, and that is a
+  // up, K>H, the up-and-out call is identically zero here, and that is a
   // statement about the contract, not a degenerate formula: the payoff needs
   // S_T > 120 and the barrier at 110 has already killed every such path.
   { Params p{100.0, 120.0, 110.0, 0.05, 0.0, 0.3, 0.2};
@@ -93,7 +92,7 @@ static void test_table() {
 
 // in + out = vanilla, for every type, over a sweep. The knocked-in and
 // knocked-out events partition the sample space, so this is an identity, not an
-// approximation -- any discrepancy is a bug in the table.
+// approximation, any discrepancy is a bug in the table.
 static void test_parity() {
   for (double H : {60.0, 85.0, 95.0, 99.0, 101.0, 110.0, 140.0}) {
     for (double K : {70.0, 100.0, 125.0}) {
@@ -147,7 +146,7 @@ static void test_limits() {
 // knocked-out region, comes back as zero, and the quotient divides a whole
 // option price by the bump: a large, smooth, completely wrong delta. Before this
 // was guarded, a down-and-out call 5e-5 above its barrier reported 1.07 against a
-// true value near 1.43, falling to 0.72 as spot reached the barrier -- monotone
+// true value near 1.43, falling to 0.72 as spot reached the barrier, monotone
 // and plausible the whole way down.
 static void test_delta_near_barrier() {
   double prev = 0.0;
@@ -174,10 +173,10 @@ static void test_delta_near_barrier() {
   //
   // With the barrier a thousandth of a percent above spot the contract knocks out
   // almost surely: it is worth zero to machine precision, and differencing three
-  // zeros gives a delta that is also zero to machine precision -- measured at
+  // zeros gives a delta that is also zero to machine precision, measured at
   // +1.8e-13, with a sign that is whichever way the rounding fell. So the thing
   // to assert is the magnitude. Two earlier versions of this test asserted the
-  // SIGN here, which is a statement about rounding noise and nothing else; the
+  // sign here, which is a statement about rounding noise and nothing else; the
   // first passed only by luck and broke the moment the formulas were cleaned up.
   Params up{100.0, 100.0, 100.001, 0.05, 0.0, 0.20, 1.0};
   const double du = barrier_cont_delta(Side::Call, Dir::Up, Knock::Out, up);
@@ -199,7 +198,7 @@ static void test_delta_near_barrier() {
 // 1/sigma^2, so the factor (H/S)^{2(mu+1)} in the C and D terms overflows for
 // small sigma on an up barrier. At sigma = 0.002 the exponent is 2383, exp()
 // returns infinity, and the function used to hand back 0.0 for an up-and-out call
-// worth 4.877 -- a clean, plausible zero, with in + out = vanilla off by the whole
+// worth 4.877, a clean, plausible zero, with in + out = vanilla off by the whole
 // premium. The terms are now formed as exp(exponent + log Phi), because whenever
 // the power overflows the normal CDF beside it is underflowing by as much.
 static void test_parity_small_sigma() {

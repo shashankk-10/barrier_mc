@@ -1,16 +1,8 @@
-// The continuity correction, and the accumulators underneath it.
+// The correction, and the accumulators under it.
 //
-// This file exists because of a mutation-testing result. Flipping the sign in
-// bgk_barrier -- shifting the barrier toward spot instead of away from it, which
-// is the single most likely thing to get wrong about the correction -- survived
-// the entire suite. Everything that exercised the correction lived in the
-// experiments, which ctest does not run, so the headline formula of the project
-// was the one piece of it with no test at all.
-//
-// The assertion that kills it is not a hardcoded price. It is the structural
-// statement the correction makes: the shifted continuous price must be closer to
-// the discretely-monitored benchmark than the unshifted one, by a wide and
-// widening margin. A correction applied backwards makes it further away.
+// This file exists because mutation testing found bgk.hpp had no assertions at
+// all: flipping the shift direction survived the whole suite. It was exercised
+// only by experiments, which ctest does not run.
 
 #include <cmath>
 #include <initializer_list>
@@ -74,7 +66,7 @@ static void test_leading_coefficient() {
   const double d = dV_dH(Side::Call, Dir::Down, Knock::Out, p);
   CHECK(d < 0.0);
   // So the predicted leading coefficient of the gap is positive: discrete
-  // monitoring makes a knock-out worth MORE.
+  // monitoring makes a knock-out worth more.
   const double c1 = leading_gap_coeff(Side::Call, Dir::Down, Knock::Out, p);
   CHECK(c1 > 0.0);
   CHECK_REL(c1, -kBeta * p.sigma * p.H * d, 1e-14);
@@ -87,8 +79,8 @@ static void test_leading_coefficient() {
 }
 
 // Welford against a variance that is known in closed form. The mutation run also
-// found that accumulating M2 against the post-update mean -- a plausible
-// misreading of the algorithm -- changed no assertion anywhere in the suite.
+// found that accumulating M2 against the post-update mean, a plausible
+// misreading of the algorithm, changed no assertion anywhere in the suite.
 static void test_welford() {
   const int n = 1000;
   Welford w;
@@ -108,7 +100,7 @@ static void test_welford() {
   CHECK_REL(a.var(), w.var(), 1e-11);
 
   // A constant stream has exactly zero variance, and must not come out
-  // negative -- which is what the cancelling textbook formula does when the
+  // negative, which is what the cancelling textbook formula does when the
   // mean is large relative to the spread.
   Welford c;
   for (int i = 0; i < 500; ++i) c.add(1e8);

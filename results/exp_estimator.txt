@@ -2,7 +2,7 @@
 === exp_estimator: why the coupled estimator, and what it buys ========
 contract : down-and-out call, zero rebate
 params   : S=100 K=100 H=95 r=0.05 q=0 sigma=0.3 T=0.2
-1048576 paths, 8 threads, 6.0 s
+1048576 paths, 8 threads, 7.2 s
 
 [1] the bridge estimator: lower variance, and flat in m
 
@@ -62,7 +62,7 @@ params   : S=100 K=100 H=95 r=0.05 q=0 sigma=0.3 T=0.2
     Efficiency is 1/(1+rho) for correlation rho between a path and its
     reflection. The gain is real but modest: the terminal payoff is
     monotone in the driving normals, which is the case antithetic
-    sampling suits, but the knock-out indicator is not -- a path and its
+    sampling suits, but the knock-out indicator is not. A path and its
     reflection are not both near the barrier, so the negative correlation
     that pays for the second evaluation is much weaker than it would be
     for a vanilla.

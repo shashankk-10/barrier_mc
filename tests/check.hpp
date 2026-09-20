@@ -44,7 +44,7 @@ inline int finish(const char* suite) {
               (long long)_b);                                                  \
   } while (0)
 
-// Absolute tolerance. Use when the quantity has a natural scale -- a price in
+// Absolute tolerance. Use when the quantity has a natural scale: a price in
 // currency units, a probability, a fitted exponent.
 #define CHECK_NEAR(a, b, tol)                                                  \
   do {                                                                         \

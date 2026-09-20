@@ -1,15 +1,9 @@
-// The Monte Carlo estimators, checked against the two things that already have
-// independent references: the continuous closed form and the convolution
-// benchmark.
+// The Monte Carlo estimators, against the closed form and the benchmark.
 //
-// The assertions that matter here are not "the price is about right". They are
-// the structural claims the README makes:
-//   - the bridge estimator is unbiased for the continuous price at every m, so
-//     its mean must not drift with m;
-//   - the discrete estimator converges to the convolution benchmark at each m;
-//   - the coupled difference has a variance far below either term, which is the
-//     entire reason the experiment is feasible;
-//   - the answer does not depend on how many threads ran it.
+// The assertions that matter are structural, not "the price looks right": the
+// bridge estimator must not drift with m, the coupled difference must have far
+// lower variance than either term, and the thread count must not change the
+// answer.
 
 #include <cmath>
 
@@ -25,8 +19,8 @@ static const Params kP{100.0, 100.0, 95.0, 0.05, 0.0, 0.3, 0.2};
 
 // A barrier so far below spot that no path can reach it must leave both
 // estimators equal to the vanilla payoff. That makes this a direct test of the
-// path construction and the generator -- terminal drift, terminal variance and
-// the independence of the 1600 normals a single path consumes -- with the
+// path construction and the generator, terminal drift, terminal variance and
+// the independence of the 1600 normals a single path consumes, with the
 // barrier machinery switched off. A bias in the paths themselves would move the
 // discrete and bridge prices together and so would be invisible to every test
 // that looks at their difference.
@@ -109,10 +103,10 @@ static void test_coupling_reduces_variance() {
 
 static void test_thread_invariance() {
   // A path's randomness is a pure function of its index, so every path gets the
-  // same value whatever the thread count. What that does NOT give you is a
+  // same value whatever the thread count. What that does not give you is a
   // bit-identical mean: the reduction sums the same numbers in a different
   // order, and floating point addition is not associative. So the assertion
-  // below is a tight tolerance, not equality -- see the note at the loop.
+  // below is a tight tolerance, not equality, see the note at the loop.
   // This is the test that would catch a generator being advanced per-thread
   // instead of per-path.
   McConfig a;
@@ -129,7 +123,7 @@ static void test_thread_invariance() {
     CHECK_EQ((long long)ra.levels[i].discrete.count(),
              (long long)rb.levels[i].discrete.count());
     // Floating-point summation order still differs between thread counts, so
-    // this is "the same to rounding", not bit-identical -- and the tolerance is
+    // this is "the same to rounding", not bit-identical, and the tolerance is
     // tight enough that a genuinely different path set would fail it by orders
     // of magnitude.
     CHECK_NEAR(ra.levels[i].discrete.mean(), rb.levels[i].discrete.mean(), 1e-10);

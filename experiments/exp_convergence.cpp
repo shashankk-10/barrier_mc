@@ -1,17 +1,8 @@
-// exp_convergence: how big the discretisation gap is, and how slowly it closes.
+// How big the gap is, and how slowly it closes.
 //
-// Prints, for a ladder of monitoring frequencies:
-//   * the discretely-monitored price, from the convolution benchmark, with the
-//     Richardson residual as its error bar (no sampling error at all);
-//   * the continuously-monitored price from the closed form;
-//   * the gap between them, and the same gap measured a completely different
-//     way, by the coupled Monte Carlo estimator;
-//   * the standard error a plain Monte Carlo run reports at the same m, and the
-//     ratio of the gap to it.
-//
-// The last column is the point. It is the number of standard errors by which a
-// simulation that is converging correctly to its own answer is away from the
-// answer its user probably wanted.
+// The last column is the point: the number of standard errors by which a
+// simulation converging correctly to its own answer sits from the answer its
+// user probably wanted.
 
 #include <cmath>
 #include <cstdio>
@@ -57,7 +48,7 @@ int main() {
     exact_gap.push_back(gap);
     // The standard error a plain run would report at this m and this path
     // count: the coupled discrete estimator has the same variance as a plain
-    // one, because it IS a plain one -- the coupling only affects the
+    // one, because it IS a plain one, the coupling only affects the
     // difference, not the level.
     const double se = L.discrete.stderr_();
     printf("%5d | %.12f |  %8.1e | %+11.8f | %+6.2f%% | %+11.8f (%.2e) | %13.2e | %7.1f\n",
@@ -70,7 +61,7 @@ int main() {
   const LineFit f = fit_line(logdt, logbias);
   printf(
       "\nfitted slope of log|gap| on log(dt) : %.4f   R^2 = %.5f\n"
-      "   (residual scatter %.4f -- NOT a confidence interval: the points share\n"
+      "   (residual scatter %.4f, not a confidence interval: the points share\n"
       "    paths by subsampling, so their errors are correlated. See stats.hpp.)\n",
       f.slope, f.r2, f.slope_se);
   printf("theory (Broadie-Glasserman-Kou)     : 1/2\n");

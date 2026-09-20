@@ -3,7 +3,7 @@
 contract : down-and-out call, zero rebate
 params   : S=100 K=100 H=95 r=0.05 q=0 sigma=0.3 T=0.2
 continuous closed form (bs.hpp)  : 4.004229446969
-monte carlo                      : 2097152 paths, 8 threads, 13.2 s
+monte carlo                      : 2097152 paths, 8 threads, 13.4 s
 
     m |   exact discrete  | richardson |  gap (exact) |   gap %  |  gap (coupled MC)    | plain MC s.e. | gap/s.e.
 ------+-------------------+------------+--------------+----------+----------------------+---------------+---------
@@ -16,7 +16,7 @@ monte carlo                      : 2097152 paths, 8 threads, 13.2 s
  1600 | 4.096270660944 |   2.4e-05 | +0.09204121 |  +2.30% | +0.09168785 (7.46e-04) |      5.76e-03 |    16.0
 
 fitted slope of log|gap| on log(dt) : 0.4665   R^2 = 0.99952
-   (residual scatter 0.0046 -- NOT a confidence interval: the points share
+   (residual scatter 0.0046, not a confidence interval: the points share
     paths by subsampling, so their errors are correlated. See stats.hpp.)
 theory (Broadie-Glasserman-Kou)     : 1/2
 

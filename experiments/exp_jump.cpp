@@ -1,17 +1,7 @@
-// exp_jump: where this stops working.
+// Where this stops working.
 //
-// Every result in this repo so far is a Black-Scholes result. Two of them depend
-// on the diffusion being the only thing that moves the price:
-//
-//   * the Brownian-bridge estimator is exactly unbiased for the continuously
-//     monitored price, because between monitoring dates the path is a Brownian
-//     bridge and nothing else; and
-//   * the correction's residual falls like dt^1.5, well inside the o(sqrt(dt))
-//     the theorem promises, because the only mechanism the discrete monitor
-//     misses is a diffusive excursion.
-//
-// Add a compound-Poisson jump component and ask what survives. The answers are
-// not the same for the two claims, which is the point of running it.
+// Two Black-Scholes results lean on the diffusion being the only thing moving
+// the price. Adding jumps breaks them differently, which is the point.
 
 #include <cmath>
 #include <cstdio>
@@ -114,7 +104,7 @@ int main() {
       "    benchmark, which has no sampling error); that is an order of magnitude\n"
       "    below what two million paths can resolve, so those rows are noise and\n"
       "    their 'improvement' figures mean nothing. That is not a failure of the\n"
-      "    experiment -- it is the reason the rest of this repo does not use Monte\n"
+      "    experiment. It is the reason the rest of this repo does not use Monte\n"
       "    Carlo to measure the residual. With jumps the residual rises above the\n"
       "    noise floor, and then the scaling can be read off.\n\n"
       " lambda |     m |    gap (s.e.)      |  residual (s.e.)   | |res|/s.e. |"
@@ -151,8 +141,8 @@ int main() {
       "    O(dt), whereas exp_correction's res*m^1.5 column is the constant one\n"
       "    under pure diffusion.\n"
       "\n"
-      "    So the correction keeps working -- it still removes most of the gap,\n"
-      "    and it is free -- but it stops being asymptotically exact. The barrier\n"
+      "    So the correction keeps working. It still removes most of the gap\n"
+      "    and it is free, but it stops being asymptotically exact. The barrier\n"
       "    shift compensates for a GAUSSIAN overshoot, and the part of the gap\n"
       "    caused by a jump crossing the barrier and returning inside a monitoring\n"
       "    interval is untouched by it. The improvement factor therefore grows\n"

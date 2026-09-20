@@ -23,7 +23,7 @@ fitted slope of log|residual| on log(dt):
 
    Where the asymptote starts is itself a measurement. resid*m^1.5 is
    flat at -0.103 from m=100 onward, is 13% off it at m=50, and is 2.6x
-   off at m=25 -- so the expansion becomes usable at a validity ratio of
+   off at m=25, so the expansion becomes usable at a validity ratio of
    about 3.8, not at the ratio of 2 that 'log(S/H) >> sigma*sqrt(dt)'
    might suggest. That threshold is the operationally useful form of the
    theorem's hypothesis.
@@ -52,9 +52,9 @@ secondary, and truncation-limited to a few tenths of a percent:
 
    Note that this and the residual test are NOT independent checks of
    beta: both are the first-order expansion of the same shifted closed
-   form. The independent evidence is (a) the residual EXPONENT -- a beta
+   form. The independent evidence is (a) the residual exponent: a beta
    wrong by a relative eps would leave an O(sqrt(dt)) residual, not the
-   O(dt^1.5) measured above -- and (b) the Spitzer route in exp_overshoot,
+   O(dt^1.5) measured above, and (b) the Spitzer route in exp_overshoot,
    which never looks at an option price at all.
 
 why the one-term log-log slope reads 0.4665 instead of 0.5000:
@@ -63,7 +63,7 @@ why the one-term log-log slope reads 0.4665 instead of 0.5000:
    m=1600. Fitting a single power through a two-term expansion returns
    an average of the two exponents, not the leading one.
 
-gap / (c1_theory * sqrt(dt)) -- should approach 1:
+gap / (c1_theory * sqrt(dt)), should approach 1:
    0.8474 0.8914 0.9222 0.9445 0.9605 0.9720 0.9801 
 
 --- benchmark resolution self-check ----------------------------------
@@ -107,14 +107,14 @@ barrier 50bp away     | 252 |  0.40 |  1.154489 |  1.333306 +15.49% |  1.390217 
 
 --- cost -------------------------------------------------------------
 
-   corrected closed form  : 146 ns per price (best of 5)
-   convolution benchmark  : 323 ms at m=50
+   corrected closed form  : 155 ns per price (best of 5)
+   convolution benchmark  : 368 ms at m=50
 
    Do not read that ratio as a lattice-versus-formula benchmark. This
    benchmark is deliberately extravagant: it solves the whole value
    function on two grids and extrapolates, to get six digits it does not
    need for pricing. A production lattice for one price is far cheaper
-   than 323 ms. The honest statement is the order of magnitude -- a
+   than 368 ms. The honest statement is the order of magnitude: a
    closed form is tens of nanoseconds and any grid method is
    milliseconds, so the shift is what decides whether a discretely-fixed
    barrier can live in the pricer that gets called on every quote.

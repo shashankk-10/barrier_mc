@@ -1,21 +1,7 @@
-// exp_correction: the continuity correction, and how well it actually works.
+// What the barrier shift buys, and what it leaves behind.
 //
-// Three questions, in order of how much they are worth:
-//
-//   1. How much of the gap does moving the barrier by beta*sigma*sqrt(dt)
-//      remove? (A ratio, per monitoring frequency.)
-//   2. What is left over, and at what rate does it vanish? The theory promises
-//      the residual is o(sqrt(dt)); the measurement says something stronger.
-//   3. Is the constant beta itself right? Fitting an exponent only tests the
-//      1/2. The test used here inverts instead of fitting: for each m, solve for
-//      the barrier shift the price implies, and watch it converge to beta. No
-//      basis functions, no fit window, and nothing to tune -- which matters,
-//      because the two-term-fit version of this test agrees to 0.22% on one
-//      contract and to 0.77% on another, and that spread is the truncation error
-//      of the basis instead of anything about beta.
-//
-// Everything below uses the convolution benchmark, which has no sampling error;
-// the Monte Carlo cross-check of the same quantities lives in exp_convergence.
+// Everything here uses the convolution benchmark, which has no sampling error.
+// The Monte Carlo cross-check of the same quantities is in exp_convergence.
 
 #include <chrono>
 #include <cmath>
@@ -111,7 +97,7 @@ int main() {
   printf(
       "\n   Where the asymptote starts is itself a measurement. resid*m^1.5 is\n"
       "   flat at -0.103 from m=100 onward, is 13%% off it at m=50, and is 2.6x\n"
-      "   off at m=25 -- so the expansion becomes usable at a validity ratio of\n"
+      "   off at m=25, so the expansion becomes usable at a validity ratio of\n"
       "   about 3.8, not at the ratio of 2 that 'log(S/H) >> sigma*sqrt(dt)'\n"
       "   might suggest. That threshold is the operationally useful form of the\n"
       "   theorem's hypothesis.\n");
@@ -121,7 +107,7 @@ int main() {
   // This is the test of beta, and it replaced an earlier one that did not
   // survive scrutiny. The obvious test is to fit gap = c1*sqrt(dt) + c2*dt and
   // compare c1 against its closed-form prediction -beta*sigma*H*dV/dH. That fit
-  // agrees to 0.22% on this contract -- and the agreement is an artefact: move
+  // agrees to 0.22% on this contract, and the agreement is an artefact: move
   // the window to m >= 200 and it becomes 0.06%, add a dt^1.5 basis term and it
   // becomes 0.14%, run the identical protocol on other contracts and it becomes
   // 0.77%. It is the truncation error of a two-term basis, and this one lands on
@@ -132,7 +118,7 @@ int main() {
   //     barrier_cont(H * exp(-b * sigma * sqrt(dt)))  =  exact_discrete(m)
   // for b by bisection. If the correction is right, b -> beta as dt -> 0, and
   // since the residual is O(dt^1.5) while the price's sensitivity to b is
-  // O(sqrt(dt)), the approach must be O(dt) -- linear, so one Richardson step
+  // O(sqrt(dt)), the approach must be O(dt), linear, so one Richardson step
   // gives beta to many more digits than the raw sequence.
   printf("\nthe barrier shift the price implies (no fit, no window, no basis):\n\n");
   printf("      m |   b implied    |  b - beta   | ratio to previous\n");
@@ -181,9 +167,9 @@ int main() {
   printf(
       "\n   Note that this and the residual test are NOT independent checks of\n"
       "   beta: both are the first-order expansion of the same shifted closed\n"
-      "   form. The independent evidence is (a) the residual EXPONENT -- a beta\n"
+      "   form. The independent evidence is (a) the residual exponent: a beta\n"
       "   wrong by a relative eps would leave an O(sqrt(dt)) residual, not the\n"
-      "   O(dt^1.5) measured above -- and (b) the Spitzer route in exp_overshoot,\n"
+      "   O(dt^1.5) measured above, and (b) the Spitzer route in exp_overshoot,\n"
       "   which never looks at an option price at all.\n");
 
   const LineFit fg = fit_line(ldt, lgap);
@@ -197,7 +183,7 @@ int main() {
       100.0 * std::fabs(c2 * dts.front() / (c1 * std::sqrt(dts.front()))),
       100.0 * std::fabs(c2 * dts.back() / (c1 * std::sqrt(dts.back()))));
 
-  printf("\ngap / (c1_theory * sqrt(dt)) -- should approach 1:\n   ");
+  printf("\ngap / (c1_theory * sqrt(dt)), should approach 1:\n   ");
   for (size_t i = 0; i < n; ++i)
     printf("%.4f ", gaps[i] / (c1_theory * std::sqrt(dts[i])));
   printf("\n");
@@ -207,7 +193,7 @@ int main() {
   // The residual being measured falls to 1.7e-6 by m=1600, and the benchmark
   // that measures it is a numerical scheme with an error of its own. If that
   // error is not far below the residual, the "dt^1.5" column is reporting the
-  // grid, not the mathematics -- and it would look exactly the same either way.
+  // grid, not the mathematics, and it would look exactly the same either way.
   //
   // So: recompute two of the rows at successively finer grids and watch whether
   // resid*m^1.5 settles. It does, and it settles on the value the mid-range rows
@@ -324,7 +310,7 @@ int main() {
         "   benchmark is deliberately extravagant: it solves the whole value\n"
         "   function on two grids and extrapolates, to get six digits it does not\n"
         "   need for pricing. A production lattice for one price is far cheaper\n"
-        "   than %.0f ms. The honest statement is the order of magnitude -- a\n"
+        "   than %.0f ms. The honest statement is the order of magnitude: a\n"
         "   closed form is tens of nanoseconds and any grid method is\n"
         "   milliseconds, so the shift is what decides whether a discretely-fixed\n"
         "   barrier can live in the pricer that gets called on every quote.\n",

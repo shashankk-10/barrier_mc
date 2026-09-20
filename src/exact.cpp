@@ -40,7 +40,7 @@ double discrete_conv(Side side, Dir dir, Knock knock, const Params& p, int m,
   // schedule, so in + out = vanilla holds for the discrete contract exactly, not
   // just in the continuous limit. Doing it this way also makes the parity test
   // in test_exact.cpp check the out-price twice over rather than checking a
-  // tautology -- if this line were a separate convolution the test would pass
+  // tautology, if this line were a separate convolution the test would pass
   // even when both were wrong in the same way.
   if (knock == Knock::In) {
     const double van = bs_vanilla(side, p.S, p.K, p.r, p.q, p.sigma, p.T);
@@ -108,7 +108,7 @@ double discrete_conv(Side side, Dir dir, Knock knock, const Params& p, int m,
   // out[i] = sum_j v[j] * g((j - i) h).  A convolution gives
   // c[k] = sum_j v[j] * ker[k - j]; putting k = i + (n-1) and
   // ker[t] = g((n-1-t) h) turns one into the other. This indexing IS the kernel
-  // orientation warned about in the header -- ker[t] = g((t-(n-1))h) compiles,
+  // orientation warned about in the header, ker[t] = g((t-(n-1))h) compiles,
   // runs, and is wrong.
   const size_t klen = 2 * n - 1;
   const size_t L = next_pow2(n + klen - 1);
@@ -146,7 +146,7 @@ double discrete_conv(Side side, Dir dir, Knock knock, const Params& p, int m,
   // weight (it is a trapezoid endpoint, not a value), so a central difference
   // that reaches it returns something that is not a derivative of anything.
   // That happens exactly when |k0| == 1, i.e. when spot is one node from the
-  // barrier -- rare, but reachable: k0 ~ gap*n / (2*(gap + 8*sigma*sqrt(T))),
+  // barrier, rare, but reachable: k0 ~ gap*n / (2*(gap + 8*sigma*sqrt(T))),
   // so a barrier a hundredth of a percent from spot on a 2^14 grid lands there.
   // In that case fall back to a one-sided second-order stencil pointing into
   // the live side, which never touches the barrier node.
@@ -204,8 +204,8 @@ ExactResult discrete_exact(Side side, Dir dir, Knock knock, const Params& p,
   // Doubling n usually doubles the node count between barrier and spot, but not
   // always: it is a rounded integer, and when the barrier is close enough to spot
   // that the count is already 1, doubling n leaves it at 1 and both grids come
-  // out with the SAME spacing. Then ratio is 1, ratio^2 - 1 is 0, and the
-  // extrapolation divides by zero -- it returned inf, silently, for a price that
+  // out with the same spacing. Then ratio is 1, ratio^2 - 1 is 0, and the
+  // extrapolation divides by zero, it returned inf, silently, for a price that
   // was otherwise fine. Nothing in the experiments reaches this (they run node
   // counts in the hundreds), which is exactly why it went unnoticed.
   if (ratio < 1.0 + 1e-9) {
@@ -222,7 +222,7 @@ ExactResult discrete_exact(Side side, Dir dir, Knock knock, const Params& p,
   // Delta extrapolates on the same h^2 ladder as the price, but only when both
   // grids computed it the same way. Near the barrier the coarse grid can fall
   // back to the one-sided stencil while the fine one still manages a central
-  // difference, and those two have different error constants -- extrapolating
+  // difference, and those two have different error constants, extrapolating
   // across the change gave 1.1437 against a converged 1.1545, a 0.9% error that
   // looks like a converged answer. When the stencils disagree, take the finer
   // grid's value and extrapolate nothing.

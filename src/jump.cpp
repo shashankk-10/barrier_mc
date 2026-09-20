@@ -15,8 +15,8 @@ constexpr int kDimsPerStep = 2 + 3 * kMaxJumps;  // dW, N, then (size,time,bridg
 
 // Poisson by inverse CDF. The means here are lambda*dt, at most a few
 // hundredths, so the loop almost always exits at k = 0 and a fancier sampler
-// would be slower. Truncating at kMaxJumps is safe at these means -- P(N > 6) is
-// below 1e-14 for lambda*dt < 0.1 -- but it IS a truncation, so run_jump reports
+// would be slower. Truncating at kMaxJumps is safe at these means, P(N > 6) is
+// below 1e-14 for lambda*dt < 0.1, but it IS a truncation, so run_jump reports
 // the realised mean jump count for comparison against lambda*T.
 inline int poisson_inv(double u, double mean) {
   double p = std::exp(-mean), c = p;

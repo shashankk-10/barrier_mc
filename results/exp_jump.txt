@@ -50,7 +50,7 @@ params   : S=100 K=100 H=95 r=0.05 q=0 sigma=0.3 T=0.2
     benchmark, which has no sampling error); that is an order of magnitude
     below what two million paths can resolve, so those rows are noise and
     their 'improvement' figures mean nothing. That is not a failure of the
-    experiment -- it is the reason the rest of this repo does not use Monte
+    experiment. It is the reason the rest of this repo does not use Monte
     Carlo to measure the residual. With jumps the residual rises above the
     noise floor, and then the scaling can be read off.
 
@@ -80,8 +80,8 @@ params   : S=100 K=100 H=95 r=0.05 q=0 sigma=0.3 T=0.2
     O(dt), whereas exp_correction's res*m^1.5 column is the constant one
     under pure diffusion.
 
-    So the correction keeps working -- it still removes most of the gap,
-    and it is free -- but it stops being asymptotically exact. The barrier
+    So the correction keeps working. It still removes most of the gap
+    and it is free, but it stops being asymptotically exact. The barrier
     shift compensates for a GAUSSIAN overshoot, and the part of the gap
     caused by a jump crossing the barrier and returning inside a monitoring
     interval is untouched by it. The improvement factor therefore grows

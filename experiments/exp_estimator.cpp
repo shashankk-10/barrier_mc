@@ -1,19 +1,4 @@
-// exp_estimator: why the estimator is built the way it is.
-//
-// The measurements in exp_convergence would not fit on a laptop with the obvious
-// estimator. This file is the justification, in numbers instead of assertion:
-//
-//   [1] The Brownian-bridge estimator is a conditional expectation of the
-//       indicator the discrete estimator uses, so by Rao-Blackwell it must have
-//       lower variance and it must be unbiased for the continuous price at every
-//       m. Both are checked.
-//   [2] Computing the two estimators on the same path makes their difference a
-//       low-variance estimator of the gap. Compare against the variance the same
-//       difference would have if the two runs were independent.
-//   [3] Translate that into the only currency that matters: how many paths each
-//       route needs to pin the gap down to 1%.
-//   [4] Antithetic variates on a payoff with a jump discontinuity -- do they
-//       actually help here, or is that a habit carried over from smooth payoffs?
+// Why the estimator is built the way it is, in numbers.
 
 #include <cmath>
 #include <cstdio>
@@ -115,7 +100,7 @@ int main() {
     // "path" here reports the mean of two evaluations, so its variance is
     // sigma^2 (1+rho)/2 but it cost two evaluations. Variance per unit of work
     // is therefore that variance times two, not divided by it. Dividing gives
-    // 4/(1+rho) instead of 1/(1+rho) -- a factor of four, which turns a modest
+    // 4/(1+rho) instead of 1/(1+rho), a factor of four, which turns a modest
     // real gain into a spectacular fake one.
     const double v_anti = ra.levels[i].discrete.var() * 2.0;
     const double v_plain = rp.levels[i].discrete.var();
@@ -127,7 +112,7 @@ int main() {
       "\n    Efficiency is 1/(1+rho) for correlation rho between a path and its\n"
       "    reflection. The gain is real but modest: the terminal payoff is\n"
       "    monotone in the driving normals, which is the case antithetic\n"
-      "    sampling suits, but the knock-out indicator is not -- a path and its\n"
+      "    sampling suits, but the knock-out indicator is not. A path and its\n"
       "    reflection are not both near the barrier, so the negative correlation\n"
       "    that pays for the second evaluation is much weaker than it would be\n"
       "    for a vanilla.\n");

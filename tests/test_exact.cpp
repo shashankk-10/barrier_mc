@@ -1,18 +1,8 @@
-// The discretely-monitored benchmark.
+// The convolution benchmark.
 //
-// The ordering of this file is the point. The first assertion is a case where
-// the barrier cannot possibly bite, so the answer must be the vanilla
-// Black-Scholes price; the second is a case small enough to integrate by hand
-// against an independent quadrature; only after those pass does anything here
-// assert a number that the benchmark is the sole source of.
-//
-// That ordering exists because of a specific bug. Writing the convolution with
-// the transition density as a function of the source instead of the
-// destination computes the adjoint operator. It conserves mass, it converges as
-// the grid is refined, and it returns a price that is positive, monotone in
-// every input, and about 2% low -- indistinguishable from a correct answer by
-// inspection. The m=1 test below fails on it by 0.11, which is 6 orders of
-// magnitude outside tolerance.
+// Order matters here. First a case where the barrier cannot bite, so the answer
+// must be the vanilla price. Then a case small enough to integrate independently.
+// Only after those does anything assert a number the benchmark alone produces.
 
 #include <cmath>
 #include <cstdlib>
@@ -36,7 +26,7 @@ static void test_inert_barrier() {
   CHECK_REL(discrete_exact(Side::Call, Dir::Down, Knock::Out, p, 1).price, van,
             1e-8);
   // m=0 means no monitoring at all: the same statement, by a different code
-  // path. Delta has to come back too -- the knock-in parity subtracts it, so a
+  // path. Delta has to come back too, the knock-in parity subtracts it, so a
   // zero-valued knock-in would otherwise report the whole vanilla delta.
   GridInfo g0;
   CHECK_REL(discrete_conv(Side::Call, Dir::Down, Knock::Out, p, 0, 1u << 12, &g0),
@@ -90,15 +80,15 @@ static void test_against_quadrature() {
 // spacing. It does not: the spacing is solved for from an integer node count so
 // that barrier and spot both land on nodes, so the count goes 259 -> 517 and the
 // ratio is 1.99614. Using 3 leaves a 0.5% error in the correction term, which is
-// invisible to every tolerance-based price check in this file -- the price is
-// still right to six digits -- and showed up only as the residual exponent in
+// invisible to every tolerance-based price check in this file, the price is
+// still right to six digits, and showed up only as the residual exponent in
 // exp_correction bending away from 1.5.
 //
 // What it is not invisible to is grid refinement. With the true ratio the
 // extrapolated value settles by a factor of ~16 per refinement; with 3 the
 // remaining error is proportional to the correction term itself and settles far
 // more slowly. Measured at m=100: 3.4e-08 between the 2^12 and 2^13 grids when
-// correct, 1.99e-06 when not -- a factor of 58, with the threshold below sitting
+// correct, 1.99e-06 when not, a factor of 58, with the threshold below sitting
 // comfortably between them.
 static void test_extrapolation_is_grid_stable() {
   Params p{100.0, 100.0, 95.0, 0.05, 0.0, 0.3, 0.2};
@@ -136,7 +126,7 @@ static void test_delta_far_barrier_is_vanilla() {
 // needs a test of its own: it is live code that nothing else executes.
 //
 // A barrier 50bp from spot on a 2^10 grid lands there. The check is that the
-// fallback returns a delta, not that it returns the same delta -- a one-sided
+// fallback returns a delta, not that it returns the same delta, a one-sided
 // stencil on a grid that coarse has real error, and 2% is the honest bound.
 static void test_delta_one_sided_stencil() {
   Params p{100.0, 100.0, 99.5, 0.05, 0.0, 0.20, 1.0};
@@ -156,7 +146,7 @@ static void test_delta_one_sided_stencil() {
 //
 // This test exists because a mutant that deleted that factor survived the whole
 // suite. For a down barrier the live side is upward, step is +1, and dropping
-// the factor changes nothing -- the mutant is a no-op on every case the rest of
+// the factor changes nothing, the mutant is a no-op on every case the rest of
 // this file covers. It only bites upward, where it flips the sign of the delta.
 // An up-and-out call must lose value as spot rises toward the barrier, so the
 // sign is the assertion that matters here.
@@ -195,7 +185,7 @@ static void test_extrapolation_degenerate_grids() {
 
   // Stencils differ between the grids: the coarse one falls back to the one-sided
   // difference, the fine one manages a central one. They have different error
-  // constants, so extrapolating across the change is not valid -- delta must come
+  // constants, so extrapolating across the change is not valid, delta must come
   // back as the finer grid's value untouched.
   GridInfo c, d;
   discrete_conv(Side::Call, Dir::Down, Knock::Out, p, 252, 1u << 10, &c);

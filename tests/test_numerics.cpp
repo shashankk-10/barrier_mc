@@ -1,9 +1,7 @@
-// Foundations: the normal functions, the counter-based generator, the FFT.
+// Normal functions, the generator, the FFT.
 //
-// Every assertion here compares against something produced a different way:
-// scipy for the normal values, an independently written implementation of the
-// Philox round function for the generator, a direct O(n^2) DFT for the transform.
-// Checking a function against itself would pass whatever the function did.
+// Everything is checked against something produced a different way: scipy, an
+// independent Philox implementation, a direct O(n^2) DFT.
 
 #include <cmath>
 #include <complex>
@@ -50,7 +48,7 @@ static void test_philox() {
   // Known-answer vectors. These were cross-checked against a separate
   // implementation written from the round function in the Random123 paper; the
   // third is the published vector, whose counter and key are the hex digits of
-  // pi and e -- a wrong round function does not reproduce those sixteen hex
+  // pi and e, a wrong round function does not reproduce those sixteen hex
   // digits by accident.
   auto out1 = philox4x32_10({0xffffffffu, 0xffffffffu, 0xffffffffu, 0xffffffffu},
                             {0xffffffffu, 0xffffffffu});
@@ -72,7 +70,7 @@ static void test_philox() {
   //
   // The extremes are checked directly instead of hoped for. An earlier version
   // packed 53 bits, and the all-ones input then produced (2^53 - 0.5), which is
-  // exactly halfway between two doubles and rounds UP to 2^53 -- returning
+  // exactly halfway between two doubles and rounds UP to 2^53, returning
   // exactly 1.0, and an infinite normal, from a line whose comment asserted that
   // could not happen. These assertions catch it; the 200000-draw sweep below
   // does not, because it will essentially never hit an all-ones word.
@@ -174,8 +172,8 @@ static void test_fft() {
 
   // Zero padding: a length-`len` signal transformed at length n must agree with
   // the same signal explicitly zero-extended. exact.cpp relies on this to get a
-  // LINEAR convolution out of a cyclic transform, and getting it wrong wraps the
-  // top of the grid onto the bottom -- which in a barrier lattice means the
+  // linear convolution out of a cyclic transform, and getting it wrong wraps the
+  // top of the grid onto the bottom, which in a barrier lattice means the
   // deep-in-the-money payoff leaks into the knocked-out region.
   {
     const size_t n = 64, len = 23;

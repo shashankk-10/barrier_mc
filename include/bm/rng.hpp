@@ -1,37 +1,14 @@
 #pragma once
 
-// Philox4x32-10, a counter-based generator (Salmon et al., SC'11 -- the
-// Random123 paper), plus normals by inversion.
+// Philox4x32-10 (Salmon et al., SC'11), normals by inversion.
 //
-// Why counter-based, when std::mt19937_64 is right there.
+// Counter-based rather than mt19937 because a path's d-th normal has to be a
+// pure function of (path, d). Nested grids consume dimensions out of order, and
+// the thread count must not change what a path gets.
 //
-// A conventional generator has state that advances as you draw from it, so the
-// normal a path receives depends on how many draws happened before it. That is
-// fine until the experiment needs any of the three things this project needs:
-//
-//   1. Nested grids. exp_convergence prices the same option at m = 25, 50, 100,
-//      ... and fits a slope through the results. Those estimates must be
-//      positively correlated across m or the fitted exponent is mostly noise.
-//      The way to correlate them is to build the m-grid path and the 2m-grid
-//      path from the same underlying Brownian motion, refining by bisection --
-//      which consumes dimensions out of order. A sequential generator cannot do
-//      that; a counter-based one indexes (path, dimension) directly.
-//
-//   2. Threading. A path's randomness is a pure function of its index, so worker
-//      t taking paths t, t+T, t+2T... gives every path exactly the value it
-//      would have had single-threaded. The limit of that claim is worth stating:
-//      the per-path values are bit-identical, the accumulated mean is not,
-//      because floating point addition is not associative and a different thread
-//      count sums them in a different order. test_mc asserts agreement to 1e-10,
-//      which is what is actually true; bit-equality is not.
-//
-//   3. Auditability. A disagreement between two runs is a disagreement about one
-//      named path, which can be replayed on its own without reproducing the
-//      whole run that contained it.
-//
-// The cost is real: ~10 rounds of integer multiply-xor per counter, against a
-// handful of operations for a Mersenne twister. It buys reproducibility that
-// the experiments would otherwise have to assume rather than guarantee.
+// Careful with the claim: per-path values are identical across thread counts,
+// the accumulated mean is not. FP addition is not associative. test_mc asserts
+// 1e-10, not equality.
 
 #include <array>
 #include <cstddef>

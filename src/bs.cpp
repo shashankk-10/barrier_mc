@@ -72,7 +72,7 @@ double barrier_cont(Side side, Dir dir, Knock knock, const Params& p) {
   // K vs H is not cosmetic: it decides whether the barrier sits inside or
   // outside the region where the payoff is non-zero, which changes which terms
   // are double-counted. Getting this table wrong produces prices that are
-  // positive, monotone and plausible -- which is why test_bs.cpp checks every
+  // positive, monotone and plausible, which is why test_bs.cpp checks every
   // row against in/out parity and against Monte Carlo rather than eyeballing.
   double v = 0.0;
   if (side == Side::Call && dir == Dir::Down) {         // down, call
@@ -113,7 +113,7 @@ double barrier_cont_delta(Side side, Dir dir, Knock knock, const Params& p) {
 
   // A symmetric bump is wrong when it straddles the barrier. The far leg lands
   // in the knocked-out region and comes back as zero, so the quotient divides a
-  // whole option price by a bump of 1e-4 -- which produces a large, smooth,
+  // whole option price by a bump of 1e-4, which produces a large, smooth,
   // entirely wrong delta. Measured on a down-and-out call with spot 5e-5 above
   // the barrier: 1.07 against a true value near 1.43, and it degrades further
   // the closer spot gets. Step away from the barrier instead.

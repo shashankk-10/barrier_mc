@@ -12,7 +12,7 @@
 namespace bmx {
 
 // The headline contract. A ten-week down-and-out call struck at the money with
-// the barrier 5% below spot -- chosen because 50 monitoring dates over 0.2
+// the barrier 5% below spot, chosen because 50 monitoring dates over 0.2
 // years is daily monitoring, which is what an actual contract specifies, and
 // because a 5% barrier is close enough to matter and far enough that the
 // asymptotic regime is reachable within a laptop's patience.

@@ -1,36 +1,10 @@
-// exp_overshoot: where 0.5826 comes from.
+// Where 0.5826 comes from.
 //
-// beta = -zeta(1/2)/sqrt(2*pi) is quoted in every paper that uses the continuity
-// correction and derived in almost none of them. It is not an arbitrary
-// constant and it is not numerology; it falls out of three steps, each of which
-// this file checks independently.
+// Three steps, each checked separately: Spitzer's identity, Gaussian steps, and
+// Euler-Maclaurin. Derivation in DETAILS.md.
 //
-//   1. Spitzer's identity. For any random walk with S_0 = 0,
-//          E[max_{k<=n} S_k] = sum_{k=1..n} E[S_k^+] / k.
-//      Checked here against brute-force Monte Carlo.
-//
-//   2. gaussian steps. S_k ~ N(0,k), so E[S_k^+] = sqrt(k)/sqrt(2*pi) and the
-//      identity collapses to a sum with no probability left in it:
-//          E[M_n] = (1/sqrt(2*pi)) * sum_{k=1..n} k^{-1/2}.
-//
-//   3. Euler-Maclaurin. sum_{k=1..n} k^{-1/2} = 2*sqrt(n) + zeta(1/2)
-//                                               + (1/2)*n^{-1/2} + O(n^{-3/2}).
-//      The constant term is the analytic continuation of the Riemann zeta
-//      function to s = 1/2 -- the regularised value of the divergent sum
-//      sum k^{-1/2}. Checked here by watching the partial sum minus 2*sqrt(n)
-//      converge to it, and by confirming the n^{-1/2} term as well.
-//
-// So the expected maximum of a Gaussian random walk over n steps falls short of
-// the expected maximum of the Brownian motion it samples by beta standard
-// deviations of one step, and that shortfall is exactly what moving a barrier by
-// beta*sigma*sqrt(dt) compensates for.
-//
-// The route not taken. The natural way to measure an overshoot is to
-// simulate the walk until it crosses a level and average by how much it
-// overshot. That program never finishes: the first-passage time of a DRIFTLESS
-// random walk has infinite expectation, so a batch of paths always has a few
-// still running, however long you wait. The Spitzer route does bounded work for
-// a bounded answer, which is why it is the one here.
+// Note the route not taken. Simulating a walk until it crosses a level never
+// finishes: a driftless random walk has infinite expected first-passage time.
 
 #include <cmath>
 #include <cstdio>
@@ -52,7 +26,7 @@ constexpr double kZetaHalf = -1.4603545088095868;  // zeta(1/2)
 //
 // This matters at the sizes below. At n = 1e8 the terms have fallen to 1e-4
 // while the running total is 2e4, so naive accumulation loses about
-// n * eps * total ~ 4e-4 -- which is larger than the entire quantity being
+// n * eps * total ~ 4e-4, which is larger than the entire quantity being
 // extracted (the constant sits at the 1e-5 level against 2*sqrt(n)). The naive
 // sum is printed alongside so the difference is visible instead of asserted.
 double sum_inv_sqrt_kahan(long n) {
@@ -133,9 +107,9 @@ int main() {
     const double d = em - std::sqrt(2.0 * double(n) / M_PI);
     // Undo the known (1/2) n^{-1/2} term so what is left is beta itself.
     // d = -beta + (1/2) n^{-1/2} / sqrt(2 pi), so beta = -d + that term: the
-    // correction is ADDED. Subtracting it instead moves the answer by twice the
+    // correction is added. Subtracting it instead moves the answer by twice the
     // term, which at n = 1e8 is the difference between 0.5825573 and the exact
-    // 0.5825972 -- still a plausible-looking table, wrong in the 5th digit.
+    // 0.5825972, still a plausible-looking table, wrong in the 5th digit.
     const double recovered =
         -d + 0.5 / (std::sqrt(2.0 * M_PI) * std::sqrt(double(n)));
     printf("%11ld | %17.9f | %+21.12f | %15.10f\n", n, em, d, recovered);
